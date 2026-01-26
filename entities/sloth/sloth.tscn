@@ -1,0 +1,14 @@
+
+[gd_scene load_steps=2 format=3 uid="uid://4492768755598546531"]
+
+[ext_resource type="Script" uid="uid://mm2jfj2tuyal" path="res://entities/sloth/sloth.node.gd" id="0_abcdf"]
+
+[node name="Sloth" type="Node2D" node_paths=PackedStringArray("root", "label")]
+script = ExtResource("0_abcdf")
+root = NodePath(".")
+label = NodePath("Label")
+
+[node name="Label" type="Label" parent="."]
+offset_right = 1.0
+offset_bottom = 23.0
+
