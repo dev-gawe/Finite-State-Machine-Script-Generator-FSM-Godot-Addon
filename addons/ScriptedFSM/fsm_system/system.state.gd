@@ -9,6 +9,8 @@ func _init(_obj_class : FiniteStateMachine) -> void:
 	controlled_node = _obj_class
 	config_state()
 
+""" State Callbacks """
+
 func config_state() -> void:
 	pass
 

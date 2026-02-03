@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://b2r7owmuw1dqj"]
+
+[ext_resource type="Script" uid="uid://dkxsb5xxyfdqn" path="res://addons/ScriptedFSM/create_entity/create_entity.gd" id="1_o3bl5"]
+
+[node name="AcceptDialog" type="AcceptDialog" unique_id=164776869]
+oversampling_override = 1.0
+position = Vector2i(0, 36)
+size = Vector2i(133, 100)
+visible = true
+script = ExtResource("1_o3bl5")
+
+[node name="VForm" type="VBoxContainer" parent="." unique_id=2114016263]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -49.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HForm" type="HBoxContainer" parent="VForm" unique_id=886618615]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VForm/HForm" unique_id=153120500]
+layout_mode = 2
+text = "Entity"
+
+[node name="SubFolder" type="LineEdit" parent="VForm/HForm" unique_id=941703073]
+layout_mode = 2

@@ -1,11 +1,11 @@
 class_name FiniteStateMachine
 
 var delta : float
+var event : InputEvent
 
 var current_state: State = null
 
-func ready_fsm() -> void:
-	pass
+""" FSM Methods """
 
 func change_state(new_state: State) -> void:
 	call_deferred("_cd_change_state",new_state)
@@ -24,8 +24,29 @@ func execute_current_state() -> void:
 		current_state.loop()
 		current_state.change_state_when()
 
+""" Node Loops Callbacks """
+
+
+func execute_ready_methods() -> void:
+	pass
+
+func execute_input_methods() -> void:
+	pass
+
+func execute_shortcut_input_methods() -> void:
+	pass
+
+func execute_unhandled_input_methods() -> void:
+	pass
+
+func execute_unhandled_key_input_methods() -> void:
+	pass
+
+func execute_physiscs_process_methods() -> void:
+	pass
+
 func execute_process_methods() -> void:
 	pass
 
-func execute_physiscs_process_methods():
+func execute_draw_methods() -> void:
 	pass

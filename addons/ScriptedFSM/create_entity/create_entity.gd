@@ -6,28 +6,35 @@ func _ready():
 	confirmed.connect(_on_confirmed)
 	canceled.connect(_on_canceled)
 
-func _on_close_requested():
-	hide()
-
 func _on_canceled():
 	hide()
 
-@onready var name_input : LineEdit = $VBoxContainer/HBoxContainer/LineEdit
+func _on_close_requested():
+	hide()
 
 func _on_confirmed():
-	var root_path = "res://entities"
-	var subfolder_name = name_input.text.strip_edges().to_snake_case()
+	var input_entity = $VForm/HForm/SubFolder
+	
+	var subfolder_name = (
+		input_entity.
+		text.
+		strip_edges().
+		to_snake_case()
+	)
 	
 	if subfolder_name == "":
 		printerr("Error: Please, no empty names")
 		return
 	
+	var root_path = "res://fsm_entities"
 	var full_path = root_path.path_join(subfolder_name)
 	
 	var dir = DirAccess.open("res://")
-	
-	# Crea la carpeta padre y la subcarpeta si no existen
 	var error = dir.make_dir_recursive_absolute(full_path)
+	
+	if error != OK:
+		printerr("Error al crear el directorio. Código: ", error)
+		return
 	
 	if error == OK:
 		
@@ -42,8 +49,11 @@ func _on_confirmed():
 		# Actualizar en godot archivos nuevos
 		EditorInterface.get_resource_filesystem().scan()
 		print("Estructura creada con éxito en: ", full_path)
-	else:
-		printerr("Error al crear el directorio. Código: ", error)
+		return
+
+
+
+
 
 
 func create_entity_template_idle_state(path: String, base_name: String):
@@ -91,6 +101,10 @@ pass
 		file.close()
 
 
+
+
+
+
 func create_entity_template_rest_state(path: String, base_name: String):
 	var pascal_name = base_name.to_pascal_case()
 	var snake_name = base_name.to_snake_case()
@@ -136,32 +150,42 @@ pass
 		file.close()
 
 
+
+
+
+
 func create_entity_template_classfsm(path: String, base_name: String):
 	var pascal_name = base_name.to_pascal_case()
 	var snake_name = base_name.to_snake_case()
 	
 	var script_path = path.path_join(base_name + ".fsm.gd")
 	
-	var template = """class_name {pascal_class_name}FSM extends FiniteStateMachine
+	var template = """extends FiniteStateMachine
+class_name {pascal_class_name}FSM 
 
 
-func ready_fsm() -> void:
+## --- FSM METHODS ---
+
+
+func execute_ready_methods() -> void:
 	change_state(STATE_IDLE)
 
-
-func execute_process_methods() -> void:
+func execute_input_methods() -> void:
 	UpdateInputs()
 
-
-func execute_physiscs_process_methods():
+func execute_physiscs_process_methods() -> void:
+	# e.g. move and slide
 	pass
-	# Example: Here, you can character.move_and_slide() after current_state_machine loop runs
-	#     or any command (methods/setters)
+
+func execute_process_methods() -> void:
+	pass
 
 
-#var character : CharacterBody2D
-var sprites : AnimatedSprite2D
-var audio2d : AudioStreamPlayer2D
+## --- SCENE NODES ---
+
+
+#var root : Node # / Node2D / CharacterBody2D / Node3D / CharacterBody3D / ...
+var label : Label
 
 
 ## --- ADD STATES ---
@@ -171,10 +195,12 @@ var STATE_IDLE : State{pascal_class_name}Idle = State{pascal_class_name}Idle.new
 var STATE_REST : State{pascal_class_name}Rest = State{pascal_class_name}Rest.new(self)
 
 
-## --- Properties and Methods For All Object States ---
+## --- Shared Properties and Methods for All Entity States ---
+
 
 var input_idle : bool
 var input_rest : bool
+
 
 func UpdateInputs() -> void :
 	input_idle = Input.is_action_just_released("ui_accept")
@@ -205,6 +231,10 @@ func CanRest() -> void:
 		file.close()
 
 
+
+
+
+
 func create_entity_template_nodefsm(path: String, base_name: String):
 	var pascal_name = base_name.to_pascal_case()
 	var snake_name = base_name.to_snake_case()
@@ -214,17 +244,22 @@ func create_entity_template_nodefsm(path: String, base_name: String):
 	var template = """extends NodeFSM
 class_name Node{pascal_class_name}
 
-## TODO attach this node on your own {pascal_class_name}.tscn
+
+## --- FSM Setup ---
+
 
 var {snake_class_name}_fsm : {pascal_class_name}FSM
+
 
 func _init() -> void:
 	object_fsm = {pascal_class_name}FSM.new()
 	{snake_class_name}_fsm = object_fsm
 
-## TODO New Nodes
 
-@export var root : Node : ## Node2D / Node3D, CharacterBody2D, CharacterBody3D, etc.
+## --- Scene Nodes ---
+
+
+@export var root : Node : # / Node2D / CharacterBody2D / Node3D / CharacterBody3D / ...
 	set(value):
 		{snake_class_name}_fsm.root = value
 
@@ -232,6 +267,7 @@ func _init() -> void:
 @export var label : Label :
 	set(value):
 		{snake_class_name}_fsm.label = value
+
 """
 	
 	var data = {
@@ -244,6 +280,9 @@ func _init() -> void:
 	if file:
 		file.store_string(template.format(data))
 		file.close()
+
+
+
 
 
 
@@ -260,8 +299,8 @@ func create_entity_template_scene(path: String, base_name: String):
 	var new_uid = ResourceUID.create_id()
 	
 	var script_uid = ResourceUID.create_id()
-	var path_del_archivo = "res://entities/{snake_class_name}/{snake_class_name}.node.gd".format(pre_data)
-	ResourceUID.add_id(script_uid, path_del_archivo)
+	var path_script = "res://fsm_entities/{snake_class_name}/{snake_class_name}.node.gd".format(pre_data)
+	ResourceUID.add_id(script_uid, path_script)
 	
 	
 	var post_data = {
@@ -277,7 +316,7 @@ func create_entity_template_scene(path: String, base_name: String):
 	var template = """
 [gd_scene load_steps=2 format=3 uid="uid://{new_uid}"]
 
-[ext_resource type="Script" uid="{script_uid}" path="res://entities/{snake_class_name}/{snake_class_name}.node.gd" id="0_abcdf"]
+[ext_resource type="Script" uid="{script_uid}" path="res://fsm_entities/{snake_class_name}/{snake_class_name}.node.gd" id="0_abcdf"]
 
 [node name="{pascal_class_name}" type="Node2D" node_paths=PackedStringArray("root", "label")]
 script = ExtResource("0_abcdf")

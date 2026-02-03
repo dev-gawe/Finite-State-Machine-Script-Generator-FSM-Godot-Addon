@@ -1,13 +1,12 @@
 @tool
 extends EditorPlugin
 
-var entity_tool_menu_scene = preload("res://addons/ScriptedFSM/create_entity.tscn")
+var entity_tool_menu_scene = preload("res://addons/ScriptedFSM/create_entity/create_entity.tscn")
 var entity_tool_popup : AcceptDialog
 
 
 func _enter_tree() -> void:
-	add_tool_menu_item("Scripted FSM - Create Entity", _open_window)
-	#add_tool_menu_item("Scripted FSM - Create State", _open_window)
+	add_tool_menu_item("FSM Script Generator - Create Entity", _open_window)
 
 func _exit_tree() -> void:
 	remove_tool_menu_item("Create FSM")
