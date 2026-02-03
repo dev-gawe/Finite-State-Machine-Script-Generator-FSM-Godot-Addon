@@ -1,7 +1,7 @@
 
-[gd_scene load_steps=2 format=3 uid="uid://116269565367229823"]
+[gd_scene load_steps=2 format=3 uid="uid://5640339134758505488"]
 
-[ext_resource type="Script" uid="uid://dpvod2hjb3wkc" path="res://fsm_entities/sloth/sloth.node.gd" id="0_abcdf"]
+[ext_resource type="Script" uid="uid://cth1grtxoblk" path="res://fsm_entities/sloth/sloth.node.gd" id="0_abcdf"]
 
 [node name="Sloth" type="Node2D" node_paths=PackedStringArray("root", "label")]
 script = ExtResource("0_abcdf")

@@ -1,7 +1,10 @@
 @tool
 extends AcceptDialog
 
+@export var EntityLineEdit : LineEdit
+
 func _ready():
+	register_text_enter(EntityLineEdit)
 	close_requested.connect(_on_close_requested)
 	confirmed.connect(_on_confirmed)
 	canceled.connect(_on_canceled)
@@ -13,10 +16,9 @@ func _on_close_requested():
 	hide()
 
 func _on_confirmed():
-	var input_entity = $VForm/HForm/SubFolder
 	
 	var subfolder_name = (
-		input_entity.
+		EntityLineEdit.
 		text.
 		strip_edges().
 		to_snake_case()
@@ -62,7 +64,8 @@ func create_entity_template_idle_state(path: String, base_name: String):
 	
 	var script_path = path.path_join(base_name + ".state.idle.gd")
 	
-	var template = """class_name State{pascal_class_name}Idle extends State
+	var template = """extends State
+class_name State{pascal_class_name}Idle
 
 
 var this: {pascal_class_name}FSM
@@ -71,13 +74,13 @@ func config_state():
 	this = (controlled_node as {pascal_class_name}FSM)
 
 func enter():
-	this.Stop()
+	print("{pascal_class_name} Idle Entered")
 
 func loop():
 	this.Idle()
 
 func exit():
-	pass
+	print("{pascal_class_name} Idle Exited")
 
 func change_state_when():
 	this.CanRest()
@@ -111,30 +114,34 @@ func create_entity_template_rest_state(path: String, base_name: String):
 	
 	var script_path = path.path_join(base_name + ".state.rest.gd")
 	
-	var template = """class_name State{pascal_class_name}Rest extends State
+	var template = """extends State
+class_name State{pascal_class_name}Rest
 
 
 var this: {pascal_class_name}FSM
+
 
 func config_state():
 	this = (controlled_node as {pascal_class_name}FSM)
 
 func enter():
-	this.Stop()
+	on_entered.emit()
+	print("{pascal_class_name} Rest Entered")
 
 func loop():
-	this.Idle()
+	this.Rest()
 
 func exit():
-	pass
+	on_exited.emit()
+	print("{pascal_class_name} Rest Exited")
 
 func change_state_when():
-	this.CanRest()
+	this.CanIdle()
+
 
 # --- State Methods ---
 
 pass
-
 
 """
 	
@@ -164,6 +171,13 @@ func create_entity_template_classfsm(path: String, base_name: String):
 class_name {pascal_class_name}FSM 
 
 
+## --- ADD STATES ---
+
+
+var STATE_REST : State{pascal_class_name}Rest = State{pascal_class_name}Rest.new(self)
+var STATE_IDLE : State{pascal_class_name}Idle = State{pascal_class_name}Idle.new(self)
+
+
 ## --- FSM METHODS ---
 
 
@@ -184,15 +198,8 @@ func execute_process_methods() -> void:
 ## --- SCENE NODES ---
 
 
-#var root : Node # / Node2D / CharacterBody2D / Node3D / CharacterBody3D / ...
+var root : Node # / Node2D / CharacterBody2D / Node3D / CharacterBody3D / ...
 var label : Label
-
-
-## --- ADD STATES ---
-
-
-var STATE_IDLE : State{pascal_class_name}Idle = State{pascal_class_name}Idle.new(self)
-var STATE_REST : State{pascal_class_name}Rest = State{pascal_class_name}Rest.new(self)
 
 
 ## --- Shared Properties and Methods for All Entity States ---
@@ -200,6 +207,7 @@ var STATE_REST : State{pascal_class_name}Rest = State{pascal_class_name}Rest.new
 
 var input_idle : bool
 var input_rest : bool
+
 
 
 func UpdateInputs() -> void :
@@ -216,6 +224,13 @@ func CanRest() -> void:
 	if input_rest:
 		change_state(STATE_REST)
 
+
+
+func Rest():
+	label.text = "Resting"
+
+func Idle():
+	label.text = "Idling"
 
 """
 	
@@ -310,8 +325,6 @@ func create_entity_template_scene(path: String, base_name: String):
 		"new_uid": new_uid,
 		"script_uid": ResourceUID.id_to_text(script_uid)
 	}
-	
-	print(post_data)
 	
 	var template = """
 [gd_scene load_steps=2 format=3 uid="uid://{new_uid}"]

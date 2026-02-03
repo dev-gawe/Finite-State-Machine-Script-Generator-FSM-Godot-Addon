@@ -2,6 +2,13 @@ extends FiniteStateMachine
 class_name SlothFSM 
 
 
+## --- ADD STATES ---
+
+
+var STATE_REST : StateSlothRest = StateSlothRest.new(self)
+var STATE_IDLE : StateSlothIdle = StateSlothIdle.new(self)
+
+
 ## --- FSM METHODS ---
 
 
@@ -22,15 +29,8 @@ func execute_process_methods() -> void:
 ## --- SCENE NODES ---
 
 
-#var root : Node # / Node2D / CharacterBody2D / Node3D / CharacterBody3D / ...
+var root : Node # / Node2D / CharacterBody2D / Node3D / CharacterBody3D / ...
 var label : Label
-
-
-## --- ADD STATES ---
-
-
-var STATE_IDLE : StateSlothIdle = StateSlothIdle.new(self)
-var STATE_REST : StateSlothRest = StateSlothRest.new(self)
 
 
 ## --- Shared Properties and Methods for All Entity States ---
@@ -38,6 +38,7 @@ var STATE_REST : StateSlothRest = StateSlothRest.new(self)
 
 var input_idle : bool
 var input_rest : bool
+
 
 
 func UpdateInputs() -> void :
@@ -55,3 +56,9 @@ func CanRest() -> void:
 		change_state(STATE_REST)
 
 
+
+func Rest():
+	label.text = "Resting"
+
+func Idle():
+	label.text = "Idling"

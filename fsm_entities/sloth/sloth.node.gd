@@ -24,4 +24,3 @@ func _init() -> void:
 @export var label : Label :
 	set(value):
 		sloth_fsm.label = value
-

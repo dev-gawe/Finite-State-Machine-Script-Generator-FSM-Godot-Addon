@@ -1,25 +1,28 @@
-class_name StateSlothRest extends State
+extends State
+class_name StateSlothRest
 
 
 var this: SlothFSM
+
 
 func config_state():
 	this = (controlled_node as SlothFSM)
 
 func enter():
-	this.Stop()
+	on_entered.emit()
+	print("Sloth Rest Entered")
 
 func loop():
-	this.Idle()
+	this.Rest()
 
 func exit():
-	pass
+	on_exited.emit()
+	print("Sloth Rest Exited")
 
 func change_state_when():
-	this.CanRest()
+	this.CanIdle()
+
 
 # --- State Methods ---
 
 pass
-
-

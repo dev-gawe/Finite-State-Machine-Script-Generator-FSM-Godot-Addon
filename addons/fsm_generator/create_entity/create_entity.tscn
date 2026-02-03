@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://b2r7owmuw1dqj"]
+
+[ext_resource type="Script" uid="uid://dkxsb5xxyfdqn" path="res://addons/fsm_generator/create_entity/create_entity.gd" id="1_o3bl5"]
+
+[node name="AcceptDialog" type="AcceptDialog" unique_id=164776869 node_paths=PackedStringArray("EntityLineEdit")]
+sdf_oversize = 0
+oversampling_override = 1.0
+title = "Generate FSM Entity Folder"
+position = Vector2i(0, 36)
+size = Vector2i(465, 145)
+visible = true
+unresizable = true
+ok_button_text = "Create Entity"
+script = ExtResource("1_o3bl5")
+EntityLineEdit = NodePath("VForm/Entity/Value")
+
+[node name="VForm" type="VBoxContainer" parent="." unique_id=811397712]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 457.0
+offset_bottom = 96.0
+
+[node name="Entity" type="HBoxContainer" parent="VForm" unique_id=886618615]
+layout_mode = 2
+alignment = 2
+
+[node name="Label" type="Label" parent="VForm/Entity" unique_id=153120500]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Entity name "
+
+[node name="Value" type="LineEdit" parent="VForm/Entity" unique_id=941703073]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+placeholder_text = "Sloth"
+max_length = 16
