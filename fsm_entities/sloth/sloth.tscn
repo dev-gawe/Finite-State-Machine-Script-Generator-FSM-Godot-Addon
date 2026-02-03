@@ -1,7 +1,7 @@
 
-[gd_scene load_steps=2 format=3 uid="uid://5640339134758505488"]
+[gd_scene load_steps=2 format=3 uid="uid://ch3d3jiq3wet5"]
 
-[ext_resource type="Script" uid="uid://cth1grtxoblk" path="res://fsm_entities/sloth/sloth.node.gd" id="0_abcdf"]
+[ext_resource type="Script" uid="uid://c7h1twrqv2sry" path="res://res://fsm_entities/sloth/sloth.node.gd" id="0_abcdf"]
 
 [node name="Sloth" type="Node2D" node_paths=PackedStringArray("root", "label")]
 script = ExtResource("0_abcdf")
@@ -11,4 +11,3 @@ label = NodePath("Label")
 [node name="Label" type="Label" parent="."]
 offset_right = 1.0
 offset_bottom = 23.0
-

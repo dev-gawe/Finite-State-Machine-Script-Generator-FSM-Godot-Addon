@@ -1,36 +1,40 @@
 @tool
 extends AcceptDialog
 
-@export var EntityLineEdit : LineEdit
+# Referencias a nodos
+@export var entity_line_edit: LineEdit
 
-func _ready():
-	register_text_enter(EntityLineEdit)
+# Destino de nuevas entidades
+@export var root_path: String = "res://fsm_entities"
+
+func _ready() -> void:
+	register_text_enter(entity_line_edit)
 	close_requested.connect(_on_close_requested)
 	confirmed.connect(_on_confirmed)
 	canceled.connect(_on_canceled)
 
-func _on_canceled():
+func _on_canceled() -> void:
 	hide()
 
-func _on_close_requested():
+func _on_close_requested() -> void:
 	hide()
 
-func _on_confirmed():
+func _on_confirmed() -> void:
+	var raw_name: String = entity_line_edit.text.strip_edges()
 	
-	var subfolder_name = (
-		EntityLineEdit.
-		text.
-		strip_edges().
-		to_snake_case()
-	)
-	
-	if subfolder_name == "":
-		printerr("Error: Please, no empty names")
+	if raw_name.is_empty():
+		printerr("Error: Por favor, no uses nombres vacíos.")
 		return
 	
-	var root_path = "res://fsm_entities"
-	var full_path = root_path.path_join(subfolder_name)
+	_generate_structure(raw_name)
+
+## Main
+func _generate_structure(base_name: String) -> void:
+	var snake_name: String = base_name.to_snake_case()
+	var pascal_name: String = base_name.to_pascal_case()
+	var full_path: String = root_path.path_join(snake_name)
 	
+	# 1. Create Directory
 	var dir = DirAccess.open("res://")
 	var error = dir.make_dir_recursive_absolute(full_path)
 	
@@ -38,33 +42,70 @@ func _on_confirmed():
 		printerr("Error al crear el directorio. Código: ", error)
 		return
 	
-	if error == OK:
-		
-		create_entity_template_idle_state(full_path, subfolder_name)
-		create_entity_template_rest_state(full_path, subfolder_name)
-		
-		create_entity_template_classfsm(full_path, subfolder_name)
-		create_entity_template_nodefsm(full_path, subfolder_name)
-		
-		create_entity_template_scene(full_path, subfolder_name)
-		
-		# Actualizar en godot archivos nuevos
-		EditorInterface.get_resource_filesystem().scan()
-		print("Estructura creada con éxito en: ", full_path)
-		return
-
-
-
-
-
-
-func create_entity_template_idle_state(path: String, base_name: String):
-	var pascal_name = base_name.to_pascal_case()
-	var snake_name = base_name.to_snake_case()
+	# 2. Prepare template data
+	var nom_data: Dictionary = {
+		"pascal_class_name": pascal_name,
+		"snake_class_name": snake_name,
+	}
 	
-	var script_path = path.path_join(base_name + ".state.idle.gd")
+	var path_script = "res://fsm_entities/{snake_class_name}/{snake_class_name}.node.gd".format(nom_data)
+	var node_script_uid = ResourceUID.create_id()
+	ResourceUID.add_id(node_script_uid, path_script)
 	
-	var template = """extends State
+	var scene_uid = ResourceUID.create_id()
+	
+	var data: Dictionary = {
+		"pascal_class_name": pascal_name,
+		"snake_class_name": snake_name,
+		"root_path": root_path,
+		"scene_uid": ResourceUID.id_to_text(scene_uid),
+		"node_script_uid": ResourceUID.id_to_text(node_script_uid)
+	}
+
+	# 3. Crear Archivos
+	# Estado Idle
+	_create_file(full_path, snake_name + ".state.idle.gd", _get_template_idle(), data)
+	
+	# Estado Rest
+	_create_file(full_path, snake_name + ".state.rest.gd", _get_template_rest(), data)
+	
+	# Clase FSM
+	_create_file(full_path, snake_name + ".fsm.gd", _get_template_fsm(), data)
+	
+	# Clase Node (Faltaba en el original, inferido por el nombre)
+	_create_file(full_path, snake_name + ".node.gd", _get_template_node(), data)
+	
+	
+	# Escena TSCN
+	_create_file(full_path, snake_name + ".tscn", _get_template_scene(), data)
+	
+	# 4. Actualizar Editor
+	EditorInterface.get_resource_filesystem().scan()
+	print("Estructura creada con éxito en: ", full_path)
+	hide()
+
+# --- Helper ---
+
+func _create_file(folder: String, filename: String, template: String, data: Dictionary) -> void:
+	var file_path = folder.path_join(filename)
+	var file = FileAccess.open(file_path, FileAccess.WRITE)
+	
+	if filename.contains("tscn"):
+		var scene_uid_int = ResourceUID.text_to_id(data.scene_uid)
+		ResourceUID.add_id(scene_uid_int, file_path)
+	
+	if file:
+		# Formateamos el string usando los datos proporcionados
+		file.store_string(template.format(data))
+		file.close()
+	else:
+		printerr("Error al escribir el archivo: ", file_path)
+
+
+# --- Templates ---
+
+func _get_template_idle() -> String:
+	return """extends State
 class_name State{pascal_class_name}Idle
 
 
@@ -91,30 +132,9 @@ pass
 
 
 """
-	
-	var data = {
-		"pascal_class_name": pascal_name,
-		"snake_class_name": snake_name,
-		"original_name": base_name
-	}
-	
-	var file = FileAccess.open(script_path, FileAccess.WRITE)
-	if file:
-		file.store_string(template.format(data))
-		file.close()
 
-
-
-
-
-
-func create_entity_template_rest_state(path: String, base_name: String):
-	var pascal_name = base_name.to_pascal_case()
-	var snake_name = base_name.to_snake_case()
-	
-	var script_path = path.path_join(base_name + ".state.rest.gd")
-	
-	var template = """extends State
+func _get_template_rest() -> String:
+	return """extends State
 class_name State{pascal_class_name}Rest
 
 
@@ -142,32 +162,10 @@ func change_state_when():
 # --- State Methods ---
 
 pass
-
 """
-	
-	var data = {
-		"pascal_class_name": pascal_name,
-		"snake_class_name": snake_name,
-		"original_name": base_name
-	}
-	
-	var file = FileAccess.open(script_path, FileAccess.WRITE)
-	if file:
-		file.store_string(template.format(data))
-		file.close()
 
-
-
-
-
-
-func create_entity_template_classfsm(path: String, base_name: String):
-	var pascal_name = base_name.to_pascal_case()
-	var snake_name = base_name.to_snake_case()
-	
-	var script_path = path.path_join(base_name + ".fsm.gd")
-	
-	var template = """extends FiniteStateMachine
+func _get_template_fsm() -> String:
+	return """extends FiniteStateMachine
 class_name {pascal_class_name}FSM 
 
 
@@ -231,32 +229,10 @@ func Rest():
 
 func Idle():
 	label.text = "Idling"
-
 """
-	
-	var data = {
-		"pascal_class_name": pascal_name,
-		"snake_class_name": snake_name,
-		"original_name": base_name
-	}
-	
-	var file = FileAccess.open(script_path, FileAccess.WRITE)
-	if file:
-		file.store_string(template.format(data))
-		file.close()
 
-
-
-
-
-
-func create_entity_template_nodefsm(path: String, base_name: String):
-	var pascal_name = base_name.to_pascal_case()
-	var snake_name = base_name.to_snake_case()
-	
-	var script_path = path.path_join(base_name + ".node.gd")
-	
-	var template = """extends NodeFSM
+func _get_template_node() -> String:
+	return """extends NodeFSM
 class_name Node{pascal_class_name}
 
 
@@ -282,54 +258,13 @@ func _init() -> void:
 @export var label : Label :
 	set(value):
 		{snake_class_name}_fsm.label = value
-
 """
-	
-	var data = {
-		"pascal_class_name": pascal_name,
-		"snake_class_name": snake_name,
-		"original_name": base_name
-	}
-	
-	var file = FileAccess.open(script_path, FileAccess.WRITE)
-	if file:
-		file.store_string(template.format(data))
-		file.close()
 
+func _get_template_scene() -> String:
+	return """
+[gd_scene load_steps=2 format=3 uid="{scene_uid}"]
 
-
-
-
-
-func create_entity_template_scene(path: String, base_name: String):
-	var pascal_name = base_name.to_pascal_case()
-	var snake_name = base_name.to_snake_case()
-	
-	var pre_data = {
-		"pascal_class_name": pascal_name,
-		"snake_class_name": snake_name,
-		"original_name": base_name
-	}
-	
-	var new_uid = ResourceUID.create_id()
-	
-	var script_uid = ResourceUID.create_id()
-	var path_script = "res://fsm_entities/{snake_class_name}/{snake_class_name}.node.gd".format(pre_data)
-	ResourceUID.add_id(script_uid, path_script)
-	
-	
-	var post_data = {
-		"pascal_class_name": pascal_name,
-		"snake_class_name": snake_name,
-		"original_name": base_name,
-		"new_uid": new_uid,
-		"script_uid": ResourceUID.id_to_text(script_uid)
-	}
-	
-	var template = """
-[gd_scene load_steps=2 format=3 uid="uid://{new_uid}"]
-
-[ext_resource type="Script" uid="{script_uid}" path="res://fsm_entities/{snake_class_name}/{snake_class_name}.node.gd" id="0_abcdf"]
+[ext_resource type="Script" uid="{node_script_uid}" path="res://{root_path}/{snake_class_name}/{snake_class_name}.node.gd" id="0_abcdf"]
 
 [node name="{pascal_class_name}" type="Node2D" node_paths=PackedStringArray("root", "label")]
 script = ExtResource("0_abcdf")
@@ -339,13 +274,4 @@ label = NodePath("Label")
 [node name="Label" type="Label" parent="."]
 offset_right = 1.0
 offset_bottom = 23.0
-
 """
-	
-	var scene_path = path.path_join(base_name + ".tscn")
-	var file = FileAccess.open(scene_path, FileAccess.WRITE)
-	ResourceUID.add_id(new_uid, scene_path)
-	if file:
-		file.store_string(template.format(post_data))
-		file.close()
-	
