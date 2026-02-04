@@ -1,5 +1,5 @@
 extends State
-class_name StateSlothRun
+class_name StateSlothClimb
 
 
 

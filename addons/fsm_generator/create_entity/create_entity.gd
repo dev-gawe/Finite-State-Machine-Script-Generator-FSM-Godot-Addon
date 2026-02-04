@@ -174,7 +174,6 @@ class_name {pascal_class_name}States
 
 var STATE_IDLE : State{pascal_class_name}Idle = State{pascal_class_name}Idle.new(self)
 var STATE_REST : State{pascal_class_name}Rest = State{pascal_class_name}Rest.new(self)
-
 """
 
 
