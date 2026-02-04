@@ -14,6 +14,7 @@ func _ready() -> void:
 
 
 func _on_confirmed() -> void:
+	
 	var entity: String = entity_input.text.strip_edges().to_snake_case()
 	var state_name: String = state_name_input.text.strip_edges().to_snake_case()
 	
@@ -22,12 +23,16 @@ func _on_confirmed() -> void:
 		return
 	
 	_process_state_generation(entity, state_name)
+	
 	EditorInterface.get_resource_filesystem().scan()
+	await EditorInterface.get_resource_filesystem().filesystem_changed
+	hide()
 
-func _process_state_generation(entity: String, state: String) -> void:
+func _process_state_generation(entity: String, state: String) -> void:	
+	
 	var folder_path: String = root_dir.path_join(entity)
-	var fsm_script_path: String = folder_path.path_join(
-			"{entity}.fsm.gd"
+	var states_script_path: String = folder_path.path_join(
+			"{entity}.states.gd"
 			.format({"entity": entity})
 		)
 	var new_state_path: String = folder_path.path_join(
@@ -40,7 +45,9 @@ func _process_state_generation(entity: String, state: String) -> void:
 		return
 	
 	_create_state_file(new_state_path, entity, state)
-	_inject_state_into_fsm(fsm_script_path, entity, state)
+	
+	_inject_state_into_fsm(states_script_path, entity, state)
+	
 
 
 func _create_state_file(path: String, entity_name: String, state_name: String) -> void:
@@ -50,27 +57,22 @@ func _create_state_file(path: String, entity_name: String, state_name: String) -
 	})
 	
 	var template: String = _template_new_state()
+	
 	var content: String = template.format({
 		"name_class": entity_class,
 		"fsm_class": entity_name.to_pascal_case() + "FSM"
 	})
-
+	
 	var file = FileAccess.open(path, FileAccess.WRITE)
 	if file:
 		file.store_string(content)
 		file.close()
 
 
-func _inject_state_into_fsm(fsm_path: String, entity_name : String, state_name: String) -> void:
-	if not FileAccess.file_exists(fsm_path):
-		printerr("Generator: FSM script not found at {path}".format({"path": fsm_path}))
+func _inject_state_into_fsm(states_path: String, entity_name : String, state_name: String) -> void:
+	if not FileAccess.file_exists(states_path):
+		printerr("Generator: FSM script not found at {path}".format({"path": states_path}))
 		return
-
-	var file = FileAccess.open(fsm_path, FileAccess.READ)
-	var lines: Array[String] = []
-	while not file.eof_reached():
-		lines.append(file.get_line())
-	file.close()
 	
 	var entity_class_name: String = "State{entity}{state}".format({
 		"entity": entity_name.to_pascal_case(),
@@ -78,34 +80,38 @@ func _inject_state_into_fsm(fsm_path: String, entity_name : String, state_name: 
 	})
 	
 	var variable_name: String = "STATE_{state}".format({"state": state_name.to_upper()})
-	var injection: String = "var {var_name} : {class_name} = {class_name}.new(self)".format({
+	var injection: String = "var {var_name} : {name_class} = {name_class}.new(self)".format({
 		"var_name": variable_name,
-		"class_name": entity_class_name
+		"name_class": entity_class_name
 	})
 	
+	## Get all currently lines
+	var file = FileAccess.open(states_path, FileAccess.READ)
+	var lines: Array[String] = []
+	
+	while not file.eof_reached():
+		lines.append(file.get_line())
+	file.close()
+	
+	## Check already defined FSM variable
 	for line in lines:
 		if variable_name in line:
 			print("Generator: State {name} already defined in FSM. Skipping injection.".format({"name": state_name}))
 			return
 	
-	var target_index: int = 7
-	if lines.size() > target_index:
-		lines.insert(target_index, injection)
-	else:
-		lines.append(injection)
+	## Add injection at the end of file
+	lines.pop_back()
+	lines.append(injection)
 	
-	var write_file = FileAccess.open(fsm_path, FileAccess.WRITE)
+	## Rewrite file lines
+	var write_file = FileAccess.open(states_path, FileAccess.WRITE)
 	if write_file:
 		for line in lines:
 			write_file.store_line(line)
 		write_file.close()
 	
-	var fsm_resource = load(fsm_path)
-	if fsm_resource:
-		fsm_resource.reload()
-	
 	var success_msg: String = "[color=cyan]✔ Injected {state} into {path}[/color]"
-	print_rich(success_msg.format({"state": state_name, "path": fsm_path}))
+	print_rich(success_msg.format({"state": state_name, "path": states_path}))
 
 
 func _template_new_state() -> String:
@@ -139,9 +145,9 @@ func change_state_when():
 # --- State Methods ---
 
 
-pass
+#
 
 """
 
 
-pass
+#

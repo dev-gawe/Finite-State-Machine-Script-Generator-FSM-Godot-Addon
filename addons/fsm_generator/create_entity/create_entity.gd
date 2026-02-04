@@ -11,6 +11,7 @@ func _ready() -> void:
 	close_requested.connect(hide)
 
 func _on_confirmed() -> void:
+	
 	var base_name: String = entity_input.text.strip_edges()
 	
 	if base_name.is_empty():
@@ -18,8 +19,15 @@ func _on_confirmed() -> void:
 		return
 	
 	_generate_entity_structure(base_name)
+	
+	EditorInterface.get_resource_filesystem().scan()
+	await EditorInterface.get_resource_filesystem().filesystem_changed
+	hide()
+
+
 
 func _generate_entity_structure(base_name: String) -> void:
+	
 	var snake_name: String = base_name.to_snake_case()
 	var pascal_name: String = base_name.to_pascal_case()
 	var target_path: String = root_directory.path_join(snake_name)
@@ -52,16 +60,15 @@ func _generate_entity_structure(base_name: String) -> void:
 	var file_map: Dictionary = {
 		snake_name + ".state.idle.gd": _get_template_idle(),
 		snake_name + ".state.rest.gd": _get_template_rest(),
+		snake_name + ".states.gd": _get_template_states(),
 		snake_name + ".fsm.gd": _get_template_fsm(),
 		snake_name + ".node.gd": _get_template_node(),
 		snake_name + ".tscn": _get_template_scene()
 	}
-
+	
 	for file_name in file_map:
 		_create_generated_file(target_path, file_name, file_map[file_name], template_data)
 	
-	EditorInterface.get_resource_filesystem().scan()
-	hide()
 
 
 
@@ -80,7 +87,9 @@ func _create_generated_file(folder: String, file_name: String, content: String, 
 		push_error("FSM Generator: Failed to write file at " + file_path)
 
 
+
 ## --- Templates --- 
+
 
 
 func _get_template_idle() -> String:
@@ -114,9 +123,11 @@ func change_state_when():
 # --- State Methods ---
 
 
-pass
+#
 
 """
+
+
 
 func _get_template_rest() -> String:
 	return """extends State
@@ -150,20 +161,27 @@ func change_state_when():
 
 # --- State Methods ---
 
-pass
+
+#
 
 """
 
-func _get_template_fsm() -> String:
+
+
+func _get_template_states() -> String:
 	return """extends FiniteStateMachine
-class_name {pascal_class_name}FSM 
+class_name {pascal_class_name}States
 
-
-## --- ADD STATES ---
-
-
-var STATE_REST : State{pascal_class_name}Rest = State{pascal_class_name}Rest.new(self)
 var STATE_IDLE : State{pascal_class_name}Idle = State{pascal_class_name}Idle.new(self)
+var STATE_REST : State{pascal_class_name}Rest = State{pascal_class_name}Rest.new(self)
+
+"""
+
+
+
+func _get_template_fsm() -> String:
+	return """extends {pascal_class_name}States
+class_name {pascal_class_name}FSM 
 
 
 ## --- FSM METHODS ---
@@ -222,9 +240,11 @@ func Idle():
 	label.text = "Idling"
 
 
-pass
+#
 
 """
+
+
 
 func _get_template_node() -> String:
 	return """extends NodeFSM
@@ -253,6 +273,10 @@ func _init() -> void:
 @export var label : Label :
 	set(value):
 		{snake_class_name}_fsm.label = value
+
+
+#
+
 """
 
 func _get_template_scene() -> String:
@@ -271,4 +295,4 @@ offset_bottom = 23.0
 """
 
 
-pass
+#
