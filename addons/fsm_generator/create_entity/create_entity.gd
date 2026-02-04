@@ -1,118 +1,100 @@
 @tool
 extends AcceptDialog
 
-# Referencias a nodos
-@export var entity_line_edit: LineEdit
-
-# Destino de nuevas entidades
-@export var root_path: String = "res://fsm_entities"
+@export var entity_input: LineEdit
+@export var root_directory: String = "res://fsm_entities"
 
 func _ready() -> void:
-	register_text_enter(entity_line_edit)
-	close_requested.connect(_on_close_requested)
+	register_text_enter(entity_input)
 	confirmed.connect(_on_confirmed)
-	canceled.connect(_on_canceled)
-
-func _on_canceled() -> void:
-	hide()
-
-func _on_close_requested() -> void:
-	hide()
+	canceled.connect(hide)
+	close_requested.connect(hide)
 
 func _on_confirmed() -> void:
-	var raw_name: String = entity_line_edit.text.strip_edges()
+	var base_name: String = entity_input.text.strip_edges()
 	
-	if raw_name.is_empty():
-		printerr("Error: Por favor, no uses nombres vacíos.")
+	if base_name.is_empty():
+		push_error("FSM Generator: Name cannot be empty.")
 		return
 	
-	_generate_structure(raw_name)
+	_generate_entity_structure(base_name)
 
-## Main
-func _generate_structure(base_name: String) -> void:
+func _generate_entity_structure(base_name: String) -> void:
 	var snake_name: String = base_name.to_snake_case()
 	var pascal_name: String = base_name.to_pascal_case()
-	var full_path: String = root_path.path_join(snake_name)
+	var target_path: String = root_directory.path_join(snake_name)
 	
-	# 1. Create Directory
-	var dir = DirAccess.open("res://")
-	var error = dir.make_dir_recursive_absolute(full_path)
-	
-	if error != OK:
-		printerr("Error al crear el directorio. Código: ", error)
+	if DirAccess.dir_exists_absolute(target_path):
+		push_error("FSM Generator: Directory already exists at " + target_path + ". Aborting to prevent overwrite.")
 		return
 	
-	# 2. Prepare template data
-	var nom_data: Dictionary = {
+	var dir_access := DirAccess.open("res://")
+	var dir_error := dir_access.make_dir_recursive_absolute(target_path)
+	
+	if dir_error != OK:
+		push_error("FSM Generator: Could not create directory. Error code: " + str(dir_error)) 
+		return
+	
+	var node_script_path: String = "res://fsm_entities/{snake_class_name}/{snake_class_name}.node.gd".format({"snake_class_name": snake_name})
+	var node_script_uid: int = ResourceUID.create_id()
+	ResourceUID.add_id(node_script_uid, node_script_path)
+	
+	var scene_uid: int = ResourceUID.create_id()
+	
+	var template_data: Dictionary = {
 		"pascal_class_name": pascal_name,
 		"snake_class_name": snake_name,
-	}
-	
-	var path_script = "res://fsm_entities/{snake_class_name}/{snake_class_name}.node.gd".format(nom_data)
-	var node_script_uid = ResourceUID.create_id()
-	ResourceUID.add_id(node_script_uid, path_script)
-	
-	var scene_uid = ResourceUID.create_id()
-	
-	var data: Dictionary = {
-		"pascal_class_name": pascal_name,
-		"snake_class_name": snake_name,
-		"root_path": root_path,
+		"root_path": root_directory,
 		"scene_uid": ResourceUID.id_to_text(scene_uid),
 		"node_script_uid": ResourceUID.id_to_text(node_script_uid)
 	}
 
-	# 3. Crear Archivos
-	# Estado Idle
-	_create_file(full_path, snake_name + ".state.idle.gd", _get_template_idle(), data)
+	var file_map: Dictionary = {
+		snake_name + ".state.idle.gd": _get_template_idle(),
+		snake_name + ".state.rest.gd": _get_template_rest(),
+		snake_name + ".fsm.gd": _get_template_fsm(),
+		snake_name + ".node.gd": _get_template_node(),
+		snake_name + ".tscn": _get_template_scene()
+	}
+
+	for file_name in file_map:
+		_create_generated_file(target_path, file_name, file_map[file_name], template_data)
 	
-	# Estado Rest
-	_create_file(full_path, snake_name + ".state.rest.gd", _get_template_rest(), data)
-	
-	# Clase FSM
-	_create_file(full_path, snake_name + ".fsm.gd", _get_template_fsm(), data)
-	
-	# Clase Node (Faltaba en el original, inferido por el nombre)
-	_create_file(full_path, snake_name + ".node.gd", _get_template_node(), data)
-	
-	
-	# Escena TSCN
-	_create_file(full_path, snake_name + ".tscn", _get_template_scene(), data)
-	
-	# 4. Actualizar Editor
 	EditorInterface.get_resource_filesystem().scan()
-	print("Estructura creada con éxito en: ", full_path)
 	hide()
 
-# --- Helper ---
 
-func _create_file(folder: String, filename: String, template: String, data: Dictionary) -> void:
-	var file_path = folder.path_join(filename)
-	var file = FileAccess.open(file_path, FileAccess.WRITE)
+
+func _create_generated_file(folder: String, file_name: String, content: String, data: Dictionary) -> void:
+	var file_path: String = folder.path_join(file_name)
 	
-	if filename.contains("tscn"):
-		var scene_uid_int = ResourceUID.text_to_id(data.scene_uid)
-		ResourceUID.add_id(scene_uid_int, file_path)
+	if file_name.ends_with(".tscn"):
+		var uid_int: int = ResourceUID.text_to_id(data.scene_uid)
+		ResourceUID.add_id(uid_int, file_path)
 	
-	if file:
-		# Formateamos el string usando los datos proporcionados
-		file.store_string(template.format(data))
-		file.close()
+	var file_handler := FileAccess.open(file_path, FileAccess.WRITE)
+	if file_handler:
+		file_handler.store_string(content.format(data))
+		file_handler.close()
 	else:
-		printerr("Error al escribir el archivo: ", file_path)
+		push_error("FSM Generator: Failed to write file at " + file_path)
 
 
-# --- Templates ---
+## --- Templates --- 
+
 
 func _get_template_idle() -> String:
 	return """extends State
 class_name State{pascal_class_name}Idle
 
 
+
 var this: {pascal_class_name}FSM
 
 func config_state():
 	this = (controlled_node as {pascal_class_name}FSM)
+
+
 
 func enter():
 	print("{pascal_class_name} Idle Entered")
@@ -123,13 +105,16 @@ func loop():
 func exit():
 	print("{pascal_class_name} Idle Exited")
 
+
+
 func change_state_when():
 	this.CanRest()
 
+
 # --- State Methods ---
 
-pass
 
+pass
 
 """
 
@@ -138,11 +123,13 @@ func _get_template_rest() -> String:
 class_name State{pascal_class_name}Rest
 
 
-var this: {pascal_class_name}FSM
 
+var this: {pascal_class_name}FSM
 
 func config_state():
 	this = (controlled_node as {pascal_class_name}FSM)
+
+
 
 func enter():
 	on_entered.emit()
@@ -155,6 +142,8 @@ func exit():
 	on_exited.emit()
 	print("{pascal_class_name} Rest Exited")
 
+
+
 func change_state_when():
 	this.CanIdle()
 
@@ -162,6 +151,7 @@ func change_state_when():
 # --- State Methods ---
 
 pass
+
 """
 
 func _get_template_fsm() -> String:
@@ -196,7 +186,7 @@ func execute_process_methods() -> void:
 ## --- SCENE NODES ---
 
 
-var root : Node # / Node2D / CharacterBody2D / Node3D / CharacterBody3D / ...
+var root : Node2D # / Node / CharacterBody2D / Node3D / CharacterBody3D / ...
 var label : Label
 
 
@@ -227,8 +217,13 @@ func CanRest() -> void:
 func Rest():
 	label.text = "Resting"
 
+
 func Idle():
 	label.text = "Idling"
+
+
+pass
+
 """
 
 func _get_template_node() -> String:
@@ -250,7 +245,7 @@ func _init() -> void:
 ## --- Scene Nodes ---
 
 
-@export var root : Node : # / Node2D / CharacterBody2D / Node3D / CharacterBody3D / ...
+@export var root : Node2D : # / Node / CharacterBody2D / Node3D / CharacterBody3D / ...
 	set(value):
 		{snake_class_name}_fsm.root = value
 
@@ -261,8 +256,7 @@ func _init() -> void:
 """
 
 func _get_template_scene() -> String:
-	return """
-[gd_scene load_steps=2 format=3 uid="{scene_uid}"]
+	return """[gd_scene load_steps=2 format=3 uid="{scene_uid}"]
 
 [ext_resource type="Script" uid="{node_script_uid}" path="res://{root_path}/{snake_class_name}/{snake_class_name}.node.gd" id="0_abcdf"]
 
@@ -275,3 +269,6 @@ label = NodePath("Label")
 offset_right = 1.0
 offset_bottom = 23.0
 """
+
+
+pass

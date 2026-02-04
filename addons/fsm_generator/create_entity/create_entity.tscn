@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dkxsb5xxyfdqn" path="res://addons/fsm_generator/create_entity/create_entity.gd" id="1_o3bl5"]
 
-[node name="CreateEntity" type="AcceptDialog" unique_id=164776869 node_paths=PackedStringArray("entity_line_edit")]
+[node name="CreateEntity" type="AcceptDialog" unique_id=164776869 node_paths=PackedStringArray("entity_input")]
 sdf_oversize = 0
 oversampling_override = 1.0
 title = "Generate FSM Entity Folder"
@@ -12,7 +12,7 @@ visible = true
 unresizable = true
 ok_button_text = "Create Entity"
 script = ExtResource("1_o3bl5")
-entity_line_edit = NodePath("VForm/Entity/Value")
+entity_input = NodePath("VForm/Entity/Value")
 
 [node name="VForm" type="VBoxContainer" parent="." unique_id=811397712]
 offset_left = 8.0
