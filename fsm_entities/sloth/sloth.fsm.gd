@@ -5,6 +5,9 @@ class_name SlothFSM
 ## --- ADD STATES ---
 
 
+var STATE_CLIMB: StateSlothClimb = StateSlothClimb.new(self)
+var STATE_EAT: StateSlothEat = StateSlothEat.new(self)
+var STATE_WALK: StateSlothWalk = StateSlothWalk.new(self)
 var STATE_REST : StateSlothRest = StateSlothRest.new(self)
 var STATE_IDLE : StateSlothIdle = StateSlothIdle.new(self)
 

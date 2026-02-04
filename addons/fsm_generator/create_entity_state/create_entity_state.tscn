@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://b4pdwhy67lfk7"]
+
+[ext_resource type="Script" uid="uid://bvlqrcubsdd5j" path="res://addons/fsm_generator/create_entity_state/create_entity_state.gd" id="1_hiqgm"]
+
+[node name="CreateEntityState" type="AcceptDialog" unique_id=164776869 node_paths=PackedStringArray("entity_input", "state_name_input")]
+sdf_oversize = 0
+oversampling_override = 1.0
+title = "Generate FSM Entity Folder"
+position = Vector2i(0, 36)
+size = Vector2i(465, 145)
+visible = true
+unresizable = true
+ok_button_text = "Create Entity"
+script = ExtResource("1_hiqgm")
+entity_input = NodePath("VForm/Entity/Value")
+state_name_input = NodePath("VForm/State/Value")
+
+[node name="VForm" type="VBoxContainer" parent="." unique_id=811397712]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 457.0
+offset_bottom = 96.0
+
+[node name="Entity" type="HBoxContainer" parent="VForm" unique_id=886618615]
+layout_mode = 2
+alignment = 2
+
+[node name="Label" type="Label" parent="VForm/Entity" unique_id=153120500]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Entity name "
+
+[node name="Value" type="LineEdit" parent="VForm/Entity" unique_id=941703073]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+placeholder_text = "Sloth"
+max_length = 16
+
+[node name="State" type="HBoxContainer" parent="VForm" unique_id=1902514679]
+layout_mode = 2
+alignment = 2
+
+[node name="Label" type="Label" parent="VForm/State" unique_id=455102798]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "New State"
+
+[node name="Value" type="LineEdit" parent="VForm/State" unique_id=1160456368]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+placeholder_text = "Walk"
+max_length = 16
