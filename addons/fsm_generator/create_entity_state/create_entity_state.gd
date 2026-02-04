@@ -52,7 +52,7 @@ func _create_state_file(path: String, entity_name: String, state_name: String) -
 		"fsm_class": entity_name.to_pascal_case() + "FSM"
 	})
 
-	var file = FileAccess.open(path, FileAccess.WRITE)
+	var file = FileAccess.open(path, FileAccess.READ_WRITE)
 	if file:
 		file.store_string(content)
 		file.close()
@@ -62,7 +62,7 @@ func _inject_state_into_fsm(fsm_path: String, entity_name : String, state_name: 
 		printerr("Generator: FSM script not found at {path}".format({"path": fsm_path}))
 		return
 
-	var file = FileAccess.open(fsm_path, FileAccess.WRITE)
+	var file = FileAccess.open(fsm_path, FileAccess.READ_WRITE)
 	var lines: Array[String] = []
 	while not file.eof_reached():
 		lines.append(file.get_line())
@@ -90,7 +90,7 @@ func _inject_state_into_fsm(fsm_path: String, entity_name : String, state_name: 
 	else:
 		lines.append(injection)
 	
-	var write_file = FileAccess.open(fsm_path, FileAccess.WRITE)
+	var write_file = FileAccess.open(fsm_path, FileAccess.READ_WRITE)
 	if write_file:
 		for line in lines:
 			write_file.store_line(line)
