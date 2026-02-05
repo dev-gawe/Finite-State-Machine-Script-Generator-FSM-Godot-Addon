@@ -15,20 +15,28 @@ func _ready() -> void:
 
 func _on_confirmed() -> void:
 	
-	var entity: String = entity_input.text.strip_edges().to_snake_case()
-	var state_name: String = state_name_input.text.strip_edges().to_snake_case()
+	var ei = EditorInterface.get_resource_filesystem()
 	
-	if entity.is_empty() or state_name.is_empty():
+	ei.scan()
+	await ei.filesystem_changed
+	print("Create Entity State Initialized")
+	
+	_process_state_generation()
+	
+	ei.scan()
+	await ei.filesystem_changed
+	print("Create Entity State Finished")
+
+func _process_state_generation() -> void:	
+	
+	var entity: String = entity_input.text.strip_edges().to_snake_case()
+	var state: String = state_name_input.text.strip_edges().to_snake_case()
+	
+	
+	if entity.is_empty() or state.is_empty():
 		printerr("Generator: Please fill in both fields.")
 		return
 	
-	_process_state_generation(entity, state_name)
-	
-	EditorInterface.get_resource_filesystem().scan()
-	await EditorInterface.get_resource_filesystem().filesystem_changed
-	hide()
-
-func _process_state_generation(entity: String, state: String) -> void:	
 	
 	var folder_path: String = root_dir.path_join(entity)
 	var states_script_path: String = folder_path.path_join(
@@ -40,11 +48,14 @@ func _process_state_generation(entity: String, state: String) -> void:
 			.format({"entity": entity, "state": state})
 		)
 	
+	
 	if FileAccess.file_exists(new_state_path):
 		printerr("Generator: State file already exists at {path}. Aborting.".format({"path": new_state_path}))
 		return
 	
+	
 	_create_state_file(new_state_path, entity, state)
+	
 	
 	_inject_state_into_fsm(states_script_path, entity, state)
 	
@@ -122,7 +133,7 @@ class_name {name_class}
 
 var this: {fsm_class}
 
-func config_state():
+func setup_state():
 	this = (controlled_node as {fsm_class})
 
 
@@ -138,7 +149,7 @@ func exit():
 
 
 
-func change_state_when():
+func switch_state():
 	pass
 
 

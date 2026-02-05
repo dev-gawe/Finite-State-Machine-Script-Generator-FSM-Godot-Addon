@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="FSM Generator - Coded Finite State Machine"
+config/name="Finite State Machine Script Generator - FSM Godot Addon"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 

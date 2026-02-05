@@ -11,6 +11,11 @@ func _ready() -> void:
 	close_requested.connect(hide)
 
 func _on_confirmed() -> void:
+	var ei = EditorInterface.get_resource_filesystem()
+	
+	ei.scan()
+	await ei.filesystem_changed
+	print("Create Entity Initialized")
 	
 	var base_name: String = entity_input.text.strip_edges()
 	
@@ -20,9 +25,10 @@ func _on_confirmed() -> void:
 	
 	_generate_entity_structure(base_name)
 	
-	EditorInterface.get_resource_filesystem().scan()
-	await EditorInterface.get_resource_filesystem().filesystem_changed
-	hide()
+	ei.scan()
+	await ei.filesystem_changed
+	print("Create Entity Finished")
+	
 
 
 
@@ -59,7 +65,7 @@ func _generate_entity_structure(base_name: String) -> void:
 
 	var file_map: Dictionary = {
 		snake_name + ".state.idle.gd": _get_template_idle(),
-		snake_name + ".state.rest.gd": _get_template_rest(),
+		snake_name + ".state.duck.gd": _get_template_duck(),
 		snake_name + ".states.gd": _get_template_states(),
 		snake_name + ".fsm.gd": _get_template_fsm(),
 		snake_name + ".node.gd": _get_template_node(),
@@ -100,7 +106,7 @@ class_name State{pascal_class_name}Idle
 
 var this: {pascal_class_name}FSM
 
-func config_state():
+func setup_state():
 	this = (controlled_node as {pascal_class_name}FSM)
 
 
@@ -116,8 +122,8 @@ func exit():
 
 
 
-func change_state_when():
-	this.CanRest()
+func switch_state():
+	this.LeaveIdleState()
 
 
 # --- State Methods ---
@@ -129,34 +135,34 @@ func change_state_when():
 
 
 
-func _get_template_rest() -> String:
+func _get_template_duck() -> String:
 	return """extends State
-class_name State{pascal_class_name}Rest
+class_name State{pascal_class_name}Duck
 
 
 
 var this: {pascal_class_name}FSM
 
-func config_state():
+func setup_state():
 	this = (controlled_node as {pascal_class_name}FSM)
 
 
 
 func enter():
 	on_entered.emit()
-	print("{pascal_class_name} Rest Entered")
+	print("{pascal_class_name} Duck Entered")
 
 func loop():
-	this.Rest()
+	this.Duck()
 
 func exit():
 	on_exited.emit()
-	print("{pascal_class_name} Rest Exited")
+	print("{pascal_class_name} Duck Exited")
 
 
 
-func change_state_when():
-	this.CanIdle()
+func switch_state():
+	this.LeaveDuckState()
 
 
 # --- State Methods ---
@@ -173,7 +179,7 @@ func _get_template_states() -> String:
 class_name {pascal_class_name}States
 
 var STATE_IDLE : State{pascal_class_name}Idle = State{pascal_class_name}Idle.new(self)
-var STATE_REST : State{pascal_class_name}Rest = State{pascal_class_name}Rest.new(self)
+var STATE_DUCK : State{pascal_class_name}Duck = State{pascal_class_name}Duck.new(self)
 """
 
 
@@ -183,7 +189,7 @@ func _get_template_fsm() -> String:
 class_name {pascal_class_name}FSM 
 
 
-## --- FSM METHODS ---
+## --- FSM NODE LOOPS CALLBACKS ---
 
 
 func execute_ready_methods() -> void:
@@ -200,7 +206,7 @@ func execute_process_methods() -> void:
 	pass
 
 
-## --- SCENE NODES ---
+## --- {pascal_class_name} SCENE NODES ---
 
 
 var root : Node2D # / Node / CharacterBody2D / Node3D / CharacterBody3D / ...
@@ -210,29 +216,27 @@ var label : Label
 ## --- Shared Properties and Methods for All Entity States ---
 
 
-var input_idle : bool
-var input_rest : bool
+var input_duck : bool
 
 
 
 func UpdateInputs() -> void :
-	input_idle = Input.is_action_just_released("ui_accept")
-	input_rest = Input.is_action_just_pressed("ui_accept")
+	input_duck = Input.is_action_pressed("ui_accept")
 
 
-func CanIdle() -> void:
-	if input_idle:
+func LeaveIdleState() -> void:
+	if input_duck:
+		change_state(STATE_DUCK)
+
+
+func LeaveDuckState() -> void:
+	if not input_duck:
 		change_state(STATE_IDLE)
 
 
-func CanRest() -> void:
-	if input_rest:
-		change_state(STATE_REST)
 
-
-
-func Rest():
-	label.text = "Resting"
+func Duck():
+	label.text = "Ducking"
 
 
 func Idle():

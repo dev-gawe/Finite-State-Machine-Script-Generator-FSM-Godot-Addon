@@ -19,10 +19,10 @@ func _cd_change_state(new_state:State) -> void:
 	if current_state:
 		current_state.enter()
 
-func execute_current_state() -> void:
+func execute_current_state() -> void: # Always running in _physic_process
 	if current_state:
 		current_state.loop()
-		current_state.change_state_when()
+		current_state.switch_state()
 
 """ Node Loops Callbacks """
 

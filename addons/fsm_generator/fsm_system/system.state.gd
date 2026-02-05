@@ -1,17 +1,17 @@
 class_name State
 
-var controlled_node : FiniteStateMachine
-
 signal on_entered
 signal on_exited
 
+var controlled_node : FiniteStateMachine
+
 func _init(_obj_class : FiniteStateMachine) -> void:
 	controlled_node = _obj_class
-	config_state()
+	setup_state()
 
 """ State Callbacks """
 
-func config_state() -> void:
+func setup_state() -> void:
 	pass
 
 func enter() -> void:
@@ -23,5 +23,5 @@ func loop() -> void:
 func exit() -> void:
 	pass
 
-func change_state_when() -> void:
+func switch_state() -> void:
 	pass

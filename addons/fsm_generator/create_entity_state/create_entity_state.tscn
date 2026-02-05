@@ -5,12 +5,12 @@
 [node name="CreateEntityState" type="AcceptDialog" unique_id=164776869 node_paths=PackedStringArray("entity_input", "state_name_input")]
 sdf_oversize = 0
 oversampling_override = 1.0
-title = "Generate FSM Entity Folder"
+title = "Add new entity state"
 position = Vector2i(0, 36)
 size = Vector2i(465, 145)
 visible = true
 unresizable = true
-ok_button_text = "Create Entity"
+ok_button_text = "Create Entity State"
 script = ExtResource("1_hiqgm")
 entity_input = NodePath("VForm/Entity/Value")
 state_name_input = NodePath("VForm/State/Value")
@@ -34,7 +34,7 @@ text = "Entity name "
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-placeholder_text = "Sloth"
+placeholder_text = "Cotorra"
 max_length = 16
 
 [node name="State" type="HBoxContainer" parent="VForm" unique_id=1902514679]
