@@ -14,20 +14,14 @@ func _ready() -> void:
 
 
 func _on_confirmed() -> void:
-	
-	var ei = EditorInterface.get_resource_filesystem()
-	
-	ei.scan()
-	await ei.filesystem_changed
-	print("Create Entity State Initialized")
-	
+	print("Create Entity State: Initialized")
+		
 	_process_state_generation()
 	
-	ei.scan()
-	await ei.filesystem_changed
-	print("Create Entity State Finished")
+	EditorInterface.get_resource_filesystem().scan()
+	print("Create Entity State: Finished")
 
-func _process_state_generation() -> void:	
+func _process_state_generation() -> void:
 	
 	var entity: String = entity_input.text.strip_edges().to_snake_case()
 	var state: String = state_name_input.text.strip_edges().to_snake_case()

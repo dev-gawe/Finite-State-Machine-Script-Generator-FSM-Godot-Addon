@@ -11,11 +11,6 @@ func _ready() -> void:
 	close_requested.connect(hide)
 
 func _on_confirmed() -> void:
-	var ei = EditorInterface.get_resource_filesystem()
-	
-	ei.scan()
-	await ei.filesystem_changed
-	print("Create Entity Initialized")
 	
 	var base_name: String = entity_input.text.strip_edges()
 	
@@ -23,11 +18,12 @@ func _on_confirmed() -> void:
 		push_error("FSM Generator: Name cannot be empty.")
 		return
 	
+	print("Create Entity: Initialized")
+	
 	_generate_entity_structure(base_name)
 	
-	ei.scan()
-	await ei.filesystem_changed
-	print("Create Entity Finished")
+	EditorInterface.get_resource_filesystem().scan()
+	print("Create Entity: Finished")
 	
 
 
