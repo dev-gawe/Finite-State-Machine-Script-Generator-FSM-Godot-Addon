@@ -15,7 +15,9 @@ func _ready() -> void:
 
 func _on_confirmed() -> void:
 	print("Create Entity State: Initialized")
-		
+	
+	## TODO: Si el NEW STATE está creado, avisar y cortar
+	
 	_process_state_generation()
 	
 	EditorInterface.get_resource_filesystem().scan()
