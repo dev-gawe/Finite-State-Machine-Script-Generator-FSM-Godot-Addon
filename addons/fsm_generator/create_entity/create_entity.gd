@@ -4,14 +4,41 @@ extends AcceptDialog
 @export var entity_input: LineEdit
 @export var root_directory: String = "res://fsm_entities"
 
+var place_holder : Array[String] = [
+	"Guanaco",
+	"Cardenal",
+	"Jilguero",
+	"Puma",
+	"Ratona",
+	"Zorzal",
+	"Cotorra",
+	"Tero",
+	"Cobayo",
+	"Nutria",
+	"Hamster",
+	"Zorro",
+	"Burro",
+	"Gato",
+	"Perro",
+	"Caballo",
+	"Yegua",
+	"Cebra"
+]
+
 func _ready() -> void:
 	register_text_enter(entity_input)
+	hide_and_change_place_holder()
+	
 	confirmed.connect(_on_confirmed)
-	canceled.connect(hide)
-	close_requested.connect(hide)
+	canceled.connect(hide_and_change_place_holder)
+	close_requested.connect(hide_and_change_place_holder)
+
+func hide_and_change_place_holder():
+	hide()
+	entity_input.placeholder_text = place_holder.pick_random()
 
 func _on_confirmed() -> void:
-	
+	hide_and_change_place_holder()
 	var base_name: String = entity_input.text.strip_edges()
 	
 	if base_name.is_empty():
@@ -61,7 +88,7 @@ func _generate_entity_structure(base_name: String) -> void:
 
 	var file_map: Dictionary = {
 		snake_name + ".state.idle.gd": _get_template_idle(),
-		snake_name + ".state.duck.gd": _get_template_duck(),
+		snake_name + ".state.walk.gd": _get_template_walk(),
 		snake_name + ".states.gd": _get_template_states(),
 		snake_name + ".fsm.gd": _get_template_fsm(),
 		snake_name + ".node.gd": _get_template_node(),
@@ -125,15 +152,15 @@ func switch_state():
 # --- State Methods ---
 
 
-#
+	
 
 """
 
 
 
-func _get_template_duck() -> String:
+func _get_template_walk() -> String:
 	return """extends State
-class_name State{pascal_class_name}Duck
+class_name State{pascal_class_name}walk
 
 
 
@@ -146,25 +173,25 @@ func setup_state():
 
 func enter():
 	on_entered.emit()
-	print("{pascal_class_name} Duck Entered")
+	print("{pascal_class_name} Walk Entered")
 
 func loop():
-	this.Duck()
+	this.Walk()
 
 func exit():
 	on_exited.emit()
-	print("{pascal_class_name} Duck Exited")
+	print("{pascal_class_name} Walk Exited")
 
 
 
 func switch_state():
-	this.LeaveDuckState()
+	this.LeaveWalkState()
 
 
 # --- State Methods ---
 
 
-#
+	
 
 """
 
@@ -175,7 +202,7 @@ func _get_template_states() -> String:
 class_name {pascal_class_name}States
 
 var STATE_IDLE : State{pascal_class_name}Idle = State{pascal_class_name}Idle.new(self)
-var STATE_DUCK : State{pascal_class_name}Duck = State{pascal_class_name}Duck.new(self)
+var STATE_WALK : State{pascal_class_name}Walk = State{pascal_class_name}Walk.new(self)
 """
 
 
@@ -212,34 +239,34 @@ var label : Label
 ## --- Shared Properties and Methods for All Entity States ---
 
 
-var input_duck : bool
+var input_walk : bool
 
 
 
 func UpdateInputs() -> void :
-	input_duck = Input.is_action_pressed("ui_accept")
+	input_walk = Input.is_action_pressed("ui_accept")
 
 
 func LeaveIdleState() -> void:
-	if input_duck:
-		change_state(STATE_DUCK)
+	if input_walk:
+		change_state(STATE_WALK)
 
 
-func LeaveDuckState() -> void:
-	if not input_duck:
+func LeaveWalkState() -> void:
+	if not input_walk:
 		change_state(STATE_IDLE)
 
 
 
-func Duck():
-	label.text = "Ducking"
+func Walk():
+	label.text = "Walking"
 
 
 func Idle():
 	label.text = "Idling"
 
 
-#
+	
 
 """
 
@@ -267,14 +294,18 @@ func _init() -> void:
 @export var root : Node2D : # / Node / CharacterBody2D / Node3D / CharacterBody3D / ...
 	set(value):
 		{snake_class_name}_fsm.root = value
+	get():
+		return {snake_class_name}_fsm.root
 
 
 @export var label : Label :
 	set(value):
 		{snake_class_name}_fsm.label = value
+	get():
+		return {snake_class_name}_fsm.label
 
 
-#
+	
 
 """
 
