@@ -5,12 +5,29 @@ extends AcceptDialog
 @export var state_name_input: LineEdit
 @export_dir var root_dir: String = "res://fsm_entities"
 
+var place_holder : Array[String] = [
+	"Run",
+	"Fly",
+	"Swim",
+	"Push",
+	"Sing",
+	"Sleep",
+	"Patrol"
+]
+
 func _ready() -> void:
 	register_text_enter(entity_input)
 	register_text_enter(state_name_input)
+	hide_and_change_place_holder()
+	
 	confirmed.connect(_on_confirmed)
-	canceled.connect(hide)
-	close_requested.connect(hide)
+	canceled.connect(hide_and_change_place_holder)
+	close_requested.connect(hide_and_change_place_holder)
+
+
+func hide_and_change_place_holder():
+	hide()
+	entity_input.placeholder_text = place_holder.pick_random()
 
 
 func _on_confirmed() -> void:
