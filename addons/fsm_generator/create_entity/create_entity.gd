@@ -242,7 +242,6 @@ var label : Label
 var input_walk : bool
 
 
-
 func UpdateInputs() -> void :
 	input_walk = Input.is_action_pressed("ui_accept")
 

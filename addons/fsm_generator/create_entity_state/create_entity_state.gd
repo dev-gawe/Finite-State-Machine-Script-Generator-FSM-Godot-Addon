@@ -160,16 +160,7 @@ func loop():
 func exit():
 	pass
 
-
-
-func switch_state():
-	pass
-
-
-# --- State Methods ---
-
-
-#
+	
 
 """
 
