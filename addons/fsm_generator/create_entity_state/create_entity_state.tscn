@@ -8,7 +8,6 @@ oversampling_override = 1.0
 title = "Add new entity state"
 position = Vector2i(0, 36)
 size = Vector2i(465, 145)
-visible = true
 unresizable = true
 ok_button_text = "Create Entity State"
 script = ExtResource("1_hiqgm")
